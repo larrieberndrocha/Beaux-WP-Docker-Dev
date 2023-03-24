@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+
+  mariadb:
+    image: mariadb:latest
+    container_name: ${APP_NAME}-mariadb
+    hostname: ${DB_HOST}
+    volumes:
+      - ./mysql/lib/:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}     
+    networks:
+      - wordpress
+
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ${APP_NAME}-phpmyadmin
+    hostname: phpmyadmin
+    depends_on:
+      - mariadb
+      - wordpress
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: ${DB_HOST}
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      UPLOAD_LIMIT: 300M
+    volumes:
+      - ./config/phpmyadmin/php.ini-development:/usr/local/etc/php/php.ini-development
+      - ./config/phpmyadmin/apache2.conf:/etc/apache2/apache2.conf
+      - /sessions      
+    networks:
+      - wordpress
+
+      
+  wordpress:
+    image: wordpress-php-apache
+    container_name: ${APP_NAME}-wordpress-php-apache
+    hostname: wordpress
+    depends_on: 
+     - mariadb
+    ports:
+      - 80:80
+      - 443:443
+
+    restart: always
+    environment:
+      MYSQL_DATABASE: wordpress    
+      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_DB_TABLE_PREFIX: ${DB_TABLE_PREFIX}
+      WORDPRESS_DB_CHARSET: ${DB_CHARSET}
+      WORDPRESS_AUTH_KEY: ${WORDPRESS_AUTH_KEY}
+      WORDPRESS_SECURE_AUTH_KEY: ${WORDPRESS_SECURE_AUTH_KEY}
+      WORDPRESS_LOGGED_IN_KEY: ${WORDPRESS_LOGGED_IN_KEY}
+      WORDPRESS_NONCE_KEY: ${WORDPRESS_NONCE_KEY}
+      WORDPRESS_AUTH_SALT: ${WORDPRESS_AUTH_SALT}
+      WORDPRESS_SECURE_AUTH_SALT: ${WORDPRESS_SECURE_AUTH_SALT}
+      WORDPRESS_LOGGED_IN_SALT: ${WORDPRESS_LOGGED_IN_SALT}
+      WORDPRESS_NONCE_SALT: ${WORDPRESS_NONCE_SALT}
+      WORDPRESS_DEBUG: ${WORDPRESS_DEBUG}
+      WORDPRESS_ENVIRONMENT_TYPE: ${WORDPRESS_ENVIRONMENT_TYPE}
+      WORDPRESS_CACHE: ${WORDPRESS_CACHE}
+      WORDPRESS_MEMORY_LIMIT: ${WORDPRESS_MEMORY_LIMIT}
+      WORDPRESS_CONFIG_EXTRA: ${WORDPRESS_CONFIG_EXTRA}
+      
+    volumes: 
+      - ./certs:/etc/apache2/ssl/
+      - ./config/wordpress-php-apache/php.ini:/usr/local/etc/php/php.ini
+      - ./config/wordpress-php-apache/apache2.conf:/etc/apache2/apache2.conf
+      - ./config/wordpress-php-apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - ./html/:/var/www/html/
+      - ./logs/php_error.log:/var/log/php_error.log
+      - ./logs/debug.log:/var/www/html/wp-content/debug.log      
+    networks:
+      - wordpress
+
+networks:
+  wordpress:
+    driver: bridge  
+
+
