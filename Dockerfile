@@ -9,3 +9,8 @@ COPY ./config/wordpress-php-apache/000-default.conf /etc/apache2/sites-available
 
 EXPOSE 80
 EXPOSE 443
+
+# Update apt, install curl, install wp-cli, make wp executable
+RUN apt update && apt install curl -y
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar > /usr/local/bin/wp && chmod +x wp-cli.phar
+RUN mv wp-cli.phar /usr/local/bin/wp
