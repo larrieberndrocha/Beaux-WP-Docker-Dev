@@ -66,6 +66,8 @@ Go to the project folder.
     docker-compose up
     
     docker-compose up --remove-orphans
+    
+    docker-compose up -d
 
 ## Stop Project containers:
     
@@ -75,13 +77,19 @@ Go to the project folder.
 
     docker-compose down
 
+# Delete Project containers and remove all WordPress data:
+
+    docker compose down -v
+    
+# Show logs of project containers:
+    docker-compose logs -f
 
 # To check running containers with port :80:
 
     netstat -nlp | grep :80
 
 
-# Important Directories/Files:
+# Important Stuff:
 
 ## MySQL:
 
@@ -97,7 +105,28 @@ Go to the project folder.
     
     ./certs:/etc/apache2/ssl/
 
-# Important URLs:
+## URLs:
 
 https://localhost/ - Site URL
 https://localhost:8080 -- PHPMySQLADMIN
+
+# Install and Setup WP-CLI:
+Sources:
+https://make.wordpress.org/cli/handbook/guides/installing/
+https://github.com/wp-cli/wp-cli
+
+## Via Terminal on the WordPress PHP Apache Container 
+Run these commands:
+
+    apt update && apt install curl -y
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    php wp-cli.phar --info
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
+    wp --info
+
+## Via Dockerfile
+Add the following lines:
+
+    RUN apt update && apt install curl -y
+    RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar > /usr/local/bin/wp && chmod +x wp-cli.phar
